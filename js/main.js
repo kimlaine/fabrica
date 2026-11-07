@@ -10,8 +10,11 @@
     if (p.kinds) for (const k of Object.keys(o.kinds)) if (p.kinds[k]) Object.assign(o.kinds[k], p.kinds[k]);
     if (F.stitchRender.KINDS.some((k) => k.id === p.kind)) o.kind = p.kind;
     if (p.width > 0) o.width = p.width;
-    if (typeof p.color === 'string') o.color = p.color;
-    if ('thread' in p) o.thread = p.thread;
+    const known = p.thread && F.color.findThread(p.thread.lib, p.thread.code);
+    if ('thread' in p && (p.thread === null || known)) {
+      o.thread = p.thread;
+      if (typeof p.color === 'string') o.color = p.color;
+    }
     if (typeof p.attach === 'boolean') o.attach = p.attach;
     if (p.sort) o.sort = p.sort;
   }

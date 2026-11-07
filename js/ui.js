@@ -517,7 +517,8 @@
       if (b) U.chooseThread(threadByKey(b.dataset.key));
     });
     const hover = $('pal-hover');
-    const resetHover = () => (hover.textContent = 'DMC Stranded Cotton · ' + C.threads().length + ' colours');
+    const libNames = Object.values(F.threadLibraries || {}).map((l) => l.name).join(', ');
+    const resetHover = () => (hover.textContent = libNames + ' · ' + C.threads().length + ' colours');
     pal.addEventListener('mouseover', (e) => {
       const b = e.target.closest('[data-key]');
       if (b) {
@@ -566,7 +567,7 @@
     if (!list.length) {
       const p = document.createElement('p');
       p.className = 'muted small';
-      p.textContent = 'No DMC colour matches “' + q + '”.';
+      p.textContent = 'No thread colour matches “' + q + '”.';
       pal.appendChild(p);
       return;
     }

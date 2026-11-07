@@ -7,7 +7,7 @@ Notes for anyone (human or AI agent) working on this repository.
 **Fabrica** is a single-page browser app for comparing fabric samples: paste
 screenshots of fabrics, arrange/resize/rotate them on a board, put them on a
 common real-world scale, and draw stitches on them in real thread colours
-(DMC). See `PLAN.md` for the feature list and design decisions.
+(Mettler Metrosene). See `PLAN.md` for the feature list and design decisions.
 
 ## Hard rules
 
@@ -32,7 +32,7 @@ common real-world scale, and draw stitches on them in real thread colours
 ```
 index.html          markup for the toolbar, board, side panels, dialogs
 styles.css          all styling
-js/threads-dmc.js   GENERATED DMC colour list (see tools/build_dmc.py)
+js/threads-metrosene.js  GENERATED Metrosene colour list (see tools/build_metrosene.py)
 js/color.js         colour maths: hex/RGB/Lab/LCh, CIEDE2000, thread matching, suggestions
 js/geom.js          vector maths, polyline simplify/smooth/sample, hit tests
 js/stitches.js      procedural stitch rendering (running, back, zigzag, cross, blanket)
@@ -43,7 +43,7 @@ js/input.js         pointer/keyboard/wheel/paste/drop handling and the tools
 js/ui.js            side panels, toolbar, palette, inspector, toasts, help
 js/demo.js          procedurally generated demo fabric swatches
 js/main.js          boot: load saved board, wire everything up
-tools/build_dmc.py  regenerates js/threads-dmc.js from the source CSV
+tools/build_metrosene.py  regenerates js/threads-metrosene.js from Mettler's web page
 ```
 
 ## Coordinate systems
@@ -90,13 +90,14 @@ tools/build_dmc.py  regenerates js/threads-dmc.js from the source CSV
 
 ## Thread data
 
-`js/threads-dmc.js` is generated; do not edit it by hand. The source is
-`data-raw/floss_adrianj.csv` from <https://github.com/sharlagelfand/dmc>
-(MIT licence). Regenerate with:
-
-```bash
-python3 -I tools/build_dmc.py path/to/floss_adrianj.csv > js/threads-dmc.js
-```
+The app uses one thread range: Mettler Metrosene all-purpose sewing thread
+(318 colours). `js/threads-metrosene.js` is generated; do not edit it by hand.
+Colour numbers and names come from
+<https://www.amann-mettler.com/en/products/detail/metrosene/>. Mettler does
+not publish RGB values, so each colour is estimated from Mettler's swatch photo
+(middle of the picture, averaged in linear light, darkest/brightest 12 %
+ignored). `tools/build_metrosene.py` explains how to download the page and
+swatches and regenerate the file.
 
 Screen colours of real threads are approximations; say so in the UI where it
 matters. New thread brands go in their own `js/threads-<brand>.js` file
