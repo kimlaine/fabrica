@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fabrica — fabric &amp; thread board</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23B9532F'/%3E%3Cpath d='M7 25l4-4M13 19l4-4M19 13l4-4' stroke='%23fff' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand" title="Fabrica">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#B9532F"/><path d="M7 25l4-4M13 19l4-4M19 13l4-4" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg>
+      <span>Fabrica</span>
+    </div>
+
+    <nav class="tools" aria-label="Tools">
+      <button class="tool" data-tool="select" title="Select and move samples (V)">
+        <svg viewBox="0 0 24 24"><path d="M5.5 3.5l13 7-5.8 1.6-2.9 5.6z"/></svg><span>Select</span>
+      </button>
+      <button class="tool" data-tool="stitch" title="Draw stitches (S)">
+        <svg viewBox="0 0 24 24"><path d="M3.5 20.5l2-2M8 16l2-2M12.5 11.5l2-2"/><path d="M14 10L20.5 3.5"/><ellipse cx="19.4" cy="4.6" rx="0.6" ry="1.4" transform="rotate(45 19.4 4.6)"/></svg><span>Stitch</span>
+      </button>
+      <button class="tool" data-tool="pick" title="Pick a colour from a fabric to get thread ideas (I)">
+        <svg viewBox="0 0 24 24"><path d="M14.5 5.5l4 4"/><path d="M16 3.6a2.4 2.4 0 013.4 3.4l-2.2 2.2-3.4-3.4z"/><path d="M15.3 8.7l-8.8 8.8-2.8 0.8 0.8-2.8 8.8-8.8"/></svg><span>Pick colour</span>
+      </button>
+      <button class="tool" data-tool="measure" title="Measure a sample's real size (M)">
+        <svg viewBox="0 0 24 24"><rect x="2.5" y="8" width="19" height="8" rx="1.5"/><path d="M6 8v3M9.5 8v4.5M13 8v3M16.5 8v4.5"/></svg><span>Measure</span>
+      </button>
+      <button class="tool" data-tool="pan" title="Move around the board (H, or hold Space)">
+        <svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M12 3l-2.5 2.5M12 3l2.5 2.5M12 21l-2.5-2.5M12 21l2.5-2.5M3 12l2.5-2.5M3 12l2.5 2.5M21 12l-2.5-2.5M21 12l-2.5 2.5"/></svg><span>Pan</span>
+      </button>
+    </nav>
+
+    <div class="history">
+      <button id="undo" class="icon" title="Undo (⌘Z)" aria-label="Undo">
+        <svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 010 11H11"/></svg>
+      </button>
+      <button id="redo" class="icon" title="Redo (⇧⌘Z)" aria-label="Redo">
+        <svg viewBox="0 0 24 24"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 000 11H13"/></svg>
+      </button>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="actions">
+      <button id="add-images" title="Add pictures from files">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.7"/><path d="M21 16l-5-5-9 9"/></svg><span>Add pictures</span>
+      </button>
+      <button id="save" title="Save the board to a file (⌘S)">Save</button>
+      <button id="open" title="Open a saved board (⌘O)">Open</button>
+      <div class="menu-wrap">
+        <button id="export" title="Export a picture of the board (⌘E)" aria-haspopup="true">Export ▾</button>
+        <div id="export-menu" class="menu" hidden>
+          <button data-export="download">Download PNG</button>
+          <button data-export="copy">Copy as picture</button>
+          <p class="muted tiny">Exports the selection, or everything when nothing is selected.</p>
+        </div>
+      </div>
+      <button id="help-btn" class="icon" title="Help and shortcuts (?)" aria-label="Help">?</button>
+    </div>
+  </header>
+
+  <main class="main">
+    <div id="stage" class="stage">
+      <canvas id="board"></canvas>
+
+      <div id="empty" class="empty" hidden>
+        <div class="empty-card">
+          <h1>Paste fabric screenshots here</h1>
+          <p>Take a screenshot to the clipboard — on a Mac <kbd>⌘</kbd><kbd>⇧</kbd><kbd>⌃</kbd><kbd>4</kbd> — then press <kbd>⌘</kbd><kbd>V</kbd>. You can also drop picture files here, or right-click a picture on a website → <i>Copy Image</i>.</p>
+          <div class="btn-row center">
+            <button id="empty-add" class="primary">Add pictures…</button>
+            <button id="demo">Try with demo swatches</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="tool-hint" class="tool-hint"></div>
+
+      <div class="zoombar">
+        <button id="zoom-out" title="Zoom out (⌘−)" aria-label="Zoom out">−</button>
+        <button id="zoom-reset" title="Zoom to 100% (⌘0)">100%</button>
+        <button id="zoom-in" title="Zoom in (⌘+)" aria-label="Zoom in">+</button>
+        <button id="zoom-fit" title="Show everything (⇧1)">Fit</button>
+      </div>
+
+      <form id="measure-pop" class="popover" hidden>
+        <label for="measure-len">How long is this line in real life?</label>
+        <div class="row">
+          <input id="measure-len" type="number" min="0.001" step="any" inputmode="decimal" required>
+          <select id="measure-unit">
+            <option value="cm">cm</option>
+            <option value="mm">mm</option>
+            <option value="in">inches</option>
+          </select>
+        </div>
+        <div class="row end">
+          <button type="button" id="measure-cancel">Cancel</button>
+          <button type="submit" class="primary">Set real size</button>
+        </div>
+      </form>
+    </div>
+
+    <aside class="sidebar">
+      <!-- Selection -->
+      <section id="sel-panel" class="panel" hidden>
+        <header class="panel-head">
+          <h2 id="sel-title">Sample</h2>
+          <div class="head-actions">
+            <button id="sel-dup" class="icon small" title="Duplicate (⌘D)" aria-label="Duplicate">
+              <svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2"/></svg>
+            </button>
+            <button id="sel-del" class="icon small" title="Delete (⌫)" aria-label="Delete">
+              <svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>
+            </button>
+          </div>
+        </header>
+
+        <div id="sel-clip" class="stack">
+          <input id="clip-name" class="name-input" type="text" placeholder="Name this sample" spellcheck="false" autocomplete="off">
+          <div class="grid2">
+            <label class="field"><span>Size</span><span class="inp"><input id="clip-size" type="number" min="1" step="1"><i>%</i></span></label>
+            <label class="field"><span>Rotation</span><span class="inp"><input id="clip-rot" type="number" step="1"><i>°</i></span></label>
+          </div>
+          <div class="btn-row">
+            <button id="rot-ccw" title="Rotate 90° left">⟲ 90°</button>
+            <button id="rot-cw" title="Rotate 90° right">⟳ 90°</button>
+            <button id="flip" title="Mirror left–right">Flip</button>
+          </div>
+
+          <h3>Real size</h3>
+          <div class="grid2">
+            <label class="field"><span>Width</span><span class="inp"><input id="clip-realw" type="number" min="0" step="0.1" placeholder="?"><i>cm</i></span></label>
+            <label class="field"><span>Height</span><span class="inp"><input id="clip-realh" type="number" min="0" step="0.1" placeholder="?"><i>cm</i></span></label>
+          </div>
+          <div class="btn-row">
+            <button id="clip-measure" title="Draw a line over something of known size">Measure on picture…</button>
+            <button id="clip-uncal" class="link">Forget size</button>
+          </div>
+          <p id="cal-info" class="muted small"></p>
+          <label class="check">
+            <input type="checkbox" id="clip-linked">
+            <span><b>Link size</b> <span class="muted small">— linked samples resize together, so their patterns stay in proportion.</span></span>
+          </label>
+
+          <h3>Stitches</h3>
+          <div class="btn-row">
+            <span id="clip-stitch-count" class="muted small grow"></span>
+            <button id="clip-edit-stitches">Edit these stitches</button>
+          </div>
+
+          <h3>Layer</h3>
+          <div class="btn-row">
+            <button id="to-front" title="Bring to front (⇧])">Bring to front</button>
+            <button id="to-back" title="Send to back (⇧[)">Send to back</button>
+          </div>
+        </div>
+
+        <div id="sel-multi" class="stack">
+          <p id="sel-summary" class="muted small"></p>
+          <div class="btn-row">
+            <button id="arrange-row" title="Line the samples up next to each other">Side by side</button>
+            <button id="arrange-grid" title="Arrange the samples in a grid">Grid</button>
+            <label class="check inline"><input type="checkbox" id="arrange-gap"> with gaps</label>
+          </div>
+          <div class="btn-row">
+            <button id="multi-link" title="Resize these samples together from now on">Link sizes</button>
+            <button id="multi-unlink">Unlink</button>
+          </div>
+          <p class="muted small">Drag a corner handle to resize the whole selection together.</p>
+        </div>
+
+        <div id="sel-stitches" class="stack">
+          <p class="muted small">Change the selected stitches with the <b>Stitch</b> settings below, or click a thread colour to recolour them.</p>
+        </div>
+      </section>
+
+      <!-- Stitch settings -->
+      <section id="stitch-panel" class="panel">
+        <header class="panel-head">
+          <h2>Stitch</h2>
+          <span id="stitch-target" class="pill">New stitches</span>
+        </header>
+        <div id="kind-buttons" class="kinds" role="radiogroup" aria-label="Stitch type"></div>
+        <label class="slider">
+          <span id="len-label">Stitch length</span>
+          <input id="st-len" type="range" min="0.5" max="25" step="0.1">
+          <span class="inp"><input id="st-len-n" type="number" min="0.1" step="0.1"><i>mm</i></span>
+        </label>
+        <label class="slider" id="space-row">
+          <span id="space-label">Gap</span>
+          <input id="st-space" type="range" min="0" max="20" step="0.1">
+          <span class="inp"><input id="st-space-n" type="number" min="0" step="0.1"><i>mm</i></span>
+        </label>
+        <label class="slider">
+          <span>Thread thickness</span>
+          <input id="st-w" type="range" min="0.1" max="3" step="0.05">
+          <span class="inp"><input id="st-w-n" type="number" min="0.05" step="0.05"><i>mm</i></span>
+        </label>
+        <select id="st-preset" aria-label="Thread type presets">
+          <option value="">Thread type presets…</option>
+          <option value="0.25">Sewing thread (≈0.25 mm)</option>
+          <option value="0.4">Topstitching thread (≈0.4 mm)</option>
+          <option value="0.5">Embroidery floss, 2 strands (≈0.5 mm)</option>
+          <option value="0.7">Embroidery floss, 3 strands (≈0.7 mm)</option>
+          <option value="0.65">Pearl cotton no. 8 (≈0.65 mm)</option>
+          <option value="1">Pearl cotton no. 5 (≈1 mm)</option>
+          <option value="1">Sashiko thread (≈1 mm)</option>
+          <option value="1.2">Embroidery floss, 6 strands (≈1.2 mm)</option>
+        </select>
+        <label class="check"><input type="checkbox" id="st-attach"> <span>Stitch onto the sample <span class="muted small">(moves with it)</span></span></label>
+        <p id="stitch-note" class="muted small"></p>
+      </section>
+
+      <!-- Thread colour -->
+      <section id="thread-panel" class="panel">
+        <header class="panel-head"><h2>Thread colour</h2></header>
+        <div class="current">
+          <span id="cur-swatch" class="swatch lg"></span>
+          <div class="cur-text">
+            <div id="cur-name"></div>
+            <div id="cur-sub" class="muted small"></div>
+          </div>
+          <label class="wheel" title="Any colour (colour wheel)">
+            <input type="color" id="custom-color" aria-label="Any colour">
+            <span class="wheel-ring"></span>
+          </label>
+          <button id="screen-pick" class="icon small" title="Pick a colour from anywhere on the screen" aria-label="Pick from screen" hidden>
+            <svg viewBox="0 0 24 24"><path d="M14.5 5.5l4 4"/><path d="M16 3.6a2.4 2.4 0 013.4 3.4l-2.2 2.2-3.4-3.4z"/><path d="M15.3 8.7l-8.8 8.8-2.8 0.8 0.8-2.8 8.8-8.8"/></svg>
+          </button>
+        </div>
+
+        <div id="suggest" class="suggest" hidden>
+          <div class="suggest-head">
+            <span id="sug-swatch" class="swatch"></span>
+            <span id="sug-title" class="grow"></span>
+            <button id="sug-exact" class="small" title="Use exactly this colour">Use exact</button>
+            <button id="sug-close" class="icon small" title="Close" aria-label="Close">×</button>
+          </div>
+          <div id="sug-rows"></div>
+        </div>
+
+        <div class="palette-tools">
+          <input id="pal-search" type="search" placeholder="Search DMC number or name" autocomplete="off" spellcheck="false">
+          <select id="pal-sort" aria-label="Sort colours">
+            <option value="card">Colour card</option>
+            <option value="hue">By colour</option>
+            <option value="light">Light → dark</option>
+            <option value="number">By number</option>
+          </select>
+        </div>
+        <div id="palette" class="palette" aria-label="DMC thread colours"></div>
+        <div id="pal-hover" class="muted small pal-hover">DMC Stranded Cotton · 454 colours</div>
+        <p class="muted tiny">Screen colours of real threads are approximations — check a real colour card before buying.</p>
+
+        <details id="used" class="used">
+          <summary>Threads in this design <span id="used-count" class="muted"></span></summary>
+          <ul id="used-list"></ul>
+          <button id="used-copy" class="small">Copy shopping list</button>
+        </details>
+      </section>
+
+      <!-- Board -->
+      <section id="board-panel" class="panel">
+        <header class="panel-head"><h2>Board</h2></header>
+        <div class="field-row">
+          <span>Background</span>
+          <div id="bg-swatches" class="bg-swatches"></div>
+          <label class="wheel small" title="Custom background colour">
+            <input type="color" id="bg-custom" aria-label="Custom background colour">
+            <span class="wheel-ring"></span>
+          </label>
+        </div>
+        <div class="btn-row">
+          <label class="check inline"><input type="checkbox" id="opt-grid"> 1 cm grid</label>
+          <label class="check inline"><input type="checkbox" id="opt-shadows"> Paper shadows</label>
+        </div>
+        <h3>Linked size</h3>
+        <label class="slider">
+          <span>1 cm on the board</span>
+          <input id="px-cm" type="range" min="0" max="1000" step="1">
+          <span class="inp"><input id="px-cm-n" type="number" min="1" step="0.5"><i>px</i></span>
+        </label>
+        <p id="linked-info" class="muted small"></p>
+        <div class="btn-row">
+          <button id="fit-all" title="Zoom to show everything (⇧1)">Show everything</button>
+          <button id="clear-board" class="danger-text">Clear board</button>
+        </div>
+      </section>
+    </aside>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <dialog id="help">
+    <form method="dialog" class="help">
+      <header class="panel-head"><h2>How to use Fabrica</h2><button class="icon small" aria-label="Close">×</button></header>
+      <div class="help-cols">
+        <div>
+          <h3>Add fabric</h3>
+          <ul>
+            <li>Screenshot to clipboard (<kbd>⌘⇧⌃4</kbd> on a Mac), then <kbd>⌘V</kbd>.</li>
+            <li>Or drop picture files on the board, or use <b>Add pictures</b>.</li>
+            <li>Pictures keep their on-screen size, so screenshots taken at the same zoom stay comparable.</li>
+          </ul>
+          <h3>Match pattern sizes</h3>
+          <ul>
+            <li>Select a sample and type its real <b>width</b>, or use <b>Measure</b> (<kbd>M</kbd>): drag across a ruler or one pattern repeat and type the length.</li>
+            <li>Measured samples are shown at real size and <b>linked</b>: resize one and all linked samples follow, keeping their proportions.</li>
+            <li>You can also link samples you matched by eye, or select several and resize them together.</li>
+          </ul>
+          <h3>Stitches</h3>
+          <ul>
+            <li><b>Stitch</b> (<kbd>S</kbd>): drag on a sample. Hold <kbd>⇧</kbd> for a straight line.</li>
+            <li>Stitches stick to their sample and move, turn and resize with it.</li>
+            <li>Click a stitch with the Stitch tool (or double-click it with Select) to change it. <b>Edit these stitches</b> on a sample selects all of its stitches.</li>
+          </ul>
+          <h3>Thread colours</h3>
+          <ul>
+            <li><b>Pick colour</b> (<kbd>I</kbd>, or <kbd>⌥</kbd>-click while stitching): click a fabric to see threads that blend in, tone on tone, contrast or harmonise.</li>
+            <li>The round rainbow button opens a colour wheel for any colour.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Shortcuts</h3>
+          <table class="keys">
+            <tr><td><kbd>V</kbd> <kbd>S</kbd> <kbd>I</kbd> <kbd>M</kbd> <kbd>H</kbd></td><td>Select, Stitch, Pick colour, Measure, Pan</td></tr>
+            <tr><td><kbd>Space</kbd> + drag</td><td>Move around</td></tr>
+            <tr><td>Pinch, <kbd>⌘</kbd> + scroll</td><td>Zoom</td></tr>
+            <tr><td><kbd>⇧1</kbd> / <kbd>⇧2</kbd></td><td>Show everything / the selection</td></tr>
+            <tr><td><kbd>⇧</kbd>-click, drag a box</td><td>Select several</td></tr>
+            <tr><td><kbd>⌘A</kbd></td><td>Select all samples</td></tr>
+            <tr><td><kbd>⌥</kbd> + drag</td><td>Duplicate while moving</td></tr>
+            <tr><td><kbd>⌘</kbd> while moving</td><td>Turn off edge snapping</td></tr>
+            <tr><td><kbd>⌥</kbd> on a corner</td><td>Resize around the centre</td></tr>
+            <tr><td><kbd>⇧</kbd> while rotating</td><td>Snap to 15°</td></tr>
+            <tr><td>Arrow keys</td><td>Nudge (<kbd>⇧</kbd> = 10×)</td></tr>
+            <tr><td><kbd>[</kbd> <kbd>]</kbd></td><td>Send backward / forward (<kbd>⇧</kbd> = to back / front)</td></tr>
+            <tr><td><kbd>⌘C</kbd> <kbd>⌘V</kbd> <kbd>⌘D</kbd></td><td>Copy, paste, duplicate</td></tr>
+            <tr><td><kbd>⌫</kbd></td><td>Delete</td></tr>
+            <tr><td><kbd>⌘Z</kbd> / <kbd>⇧⌘Z</kbd></td><td>Undo / redo</td></tr>
+            <tr><td><kbd>⌘S</kbd> <kbd>⌘O</kbd> <kbd>⌘E</kbd></td><td>Save, open, export PNG</td></tr>
+            <tr><td><kbd>Esc</kbd></td><td>Cancel / deselect</td></tr>
+          </table>
+          <h3>Saving</h3>
+          <p class="small">Your board is saved in this browser automatically. Use <b>Save</b> to keep a copy as a file (pictures included) and <b>Open</b> to load it again.</p>
+          <p class="small muted">Thread colours: DMC stranded cotton, from the open <a href="https://github.com/sharlagelfand/dmc" target="_blank" rel="noopener">dmc</a> dataset (MIT). Screen colours are approximate.</p>
+        </div>
+      </div>
+    </form>
+  </dialog>
+
+  <input type="file" id="file-images" accept="image/*" multiple hidden>
+  <input type="file" id="file-open" accept=".json,application/json" hidden>
+
+  <script src="js/threads-dmc.js"></script>
+  <script src="js/color.js"></script>
+  <script src="js/geom.js"></script>
+  <script src="js/stitches.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/core.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/demo.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
